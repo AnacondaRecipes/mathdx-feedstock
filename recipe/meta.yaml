@@ -1,6 +1,6 @@
 {% set version = "26.03.0" %}
 {% set number = 0 %}
-{% set min_cutlass_version = "4.4.1.*" %}
+{% set min_cutlass_version = "4.4.2.*" %}
 {% set min_cmake_version = "3.30.*" %}
 
 {% set major_version = version.split(".")[0] %}
@@ -15,9 +15,8 @@ source:
     sha256: 95c274405102f6a263f79eb04447bd7539f66ce649779bd8e225fcb8cc71594d  # [(cuda_compiler_version or "None").startswith("13")]
 
 build:
-  skip: true  # [not (cuda_compiler_version or "None").startswith("13")]
+  skip: true  # [osx or win or (not (cuda_compiler_version or "None").startswith("13"))]
   number: {{ number }}
-  noarch: generic
   script:
     - cp -vr $SRC_DIR/nvidia/mathdx/{{ major_version }}.{{ minor_version }}/include/* $PREFIX/include/  # [linux]
     - cp -vr $SRC_DIR/nvidia/mathdx/{{ major_version }}.{{ minor_version }}/lib/* $PREFIX/lib/          # [linux]
@@ -35,9 +34,8 @@ requirements:
   host:
     # https://docs.nvidia.com/cuda/cublasdx/requirements_func.html#requirements-and-functionality
     - cutlass {{ min_cutlass_version }}
-    - cuda-version  {{ cuda_compiler_version }}
+    - cuda-version {{ cuda_compiler_version }}
   run:
-    - __unix
     - {{ pin_compatible("cutlass", max_pin="x") }}
   run_constrained:
     - {{ pin_compatible("cuda-version", min_pin='x', max_pin='x') }}
@@ -47,7 +45,7 @@ test:
   files:
     - test
   requires:
-    - tree  # [linux]
+    #- tree  # [linux]
     - {{ compiler("c") }}  # [linux]
     - {{ compiler("cxx") }}  # [linux]
     - {{ stdlib("c") }}  # [linux]
@@ -70,21 +68,22 @@ test:
     - test -d $PREFIX/include/curanddx                      # [linux]
     - test -d $PREFIX/include/cusolverdx                    # [linux]
     - test -d $PREFIX/include/nvcompdx                      # [linux]
-    - tree $PREFIX/include/                                 # [linux]
+    #- tree $PREFIX/include/                                 # [linux]
     - test -f $PREFIX/lib/cmake/mathdx/mathdx-config.cmake  # [linux]
     - cmake ${CMAKE_ARGS} -GNinja test                      # [linux]
     - cmake --build .                                       # [linux]
-
 
 about:
   home: https://developer.nvidia.com/mathdx
   license: LicenseRef-MathDx-Software-License-Agreement
   license_url: https://docs.nvidia.com/cuda/cufftdx/license.html
   license_file: LICENSE.txt
+  license_family: Other
   summary: "NVIDIA MathDx device libraries"
   description: |
     NVIDIA MathDx currently contains cuBLASDx, cuFFTDx, cuSolverDx, cuRANDDx, and nvCOMPDx.
   doc_url: https://docs.nvidia.com/cuda/cufftdx/
+  dev_url: https://docs.nvidia.com/cuda/cufftdx/
 
 extra:
   recipe-maintainers:
